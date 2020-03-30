@@ -1,0 +1,51 @@
+{
+  "name": "vusion-micro",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "watch": "npm t -- --watch",
+    "coverage": "jest --coverage",
+    "lint": "eslint src --fix --ext .ts",
+    "build": "tsc",
+    "dev": "tsc -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [],
+  "author": "zhangsanshi5566@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^24.0.18",
+    "@typescript-eslint/eslint-plugin": "^2.19.2",
+    "@typescript-eslint/parser": "^2.19.2",
+    "eslint": "^6.1.0",
+    "html-webpack-plugin": "^3.2.0",
+    "husky": "^3.0.1",
+    "jest": "^24.9.0",
+    "lint-staged": "^9.2.0",
+    "ts-jest": "^24.1.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.5.3",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "{src,test}/**/*.ts": [
+      "eslint --fix",
+      "npm run test",
+      "npm run lib",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "single-spa": "^4.4.3",
+    "vusion-micro-data": "^0.0.5"
+  }
+}
