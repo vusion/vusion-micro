@@ -50,7 +50,7 @@ var registerApp = function (app) {
                 });
             },
         });
-    }, app.isActivity, app.customProps);
+    }, app.isActive, app.customProps);
 };
 export default {
     getEntries: function (name) {

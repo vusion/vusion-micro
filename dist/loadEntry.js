@@ -27,26 +27,27 @@ var loadCSS = function (root, src, appName) {
         root.appendChild(element);
     });
 };
-var loaded = {};
+var loadStatus = {};
 export default function (entry, appName) {
-    if (!loaded[appName]) {
-        loaded[appName] = {};
+    if (!loadStatus[appName]) {
+        loadStatus[appName] = {};
     }
-    var p1 = (entry.scripts || []).map(function (src) {
-        if (!loaded[appName][src]) {
-            return loadScript(document.body, src, appName).then(function () {
-                loaded[appName][src] = true;
+    var appLoadStatus = loadStatus[appName];
+    var scriptLoadStatus = (entry.js || []).map(function (src) {
+        if (!appLoadStatus[src]) {
+            appLoadStatus[src] = loadScript(document.body, src, appName).then(function () {
+                appLoadStatus[src] = Promise.resolve();
             });
         }
-        return true;
+        return appLoadStatus[src];
     });
-    var p2 = (entry.styles || []).map(function (src) {
-        if (!loaded[appName][src]) {
-            return loadCSS(document.head, src, appName).then(function () {
-                loaded[appName][src] = true;
+    var styleLoadStatus = (entry.css || []).map(function (src) {
+        if (!appLoadStatus[src]) {
+            appLoadStatus[src] = loadCSS(document.head, src, appName).then(function () {
+                appLoadStatus[src] = Promise.resolve();
             });
         }
-        return true;
+        return appLoadStatus[src];
     });
-    return Promise.all(__spreadArrays(p1, p2));
+    return Promise.all(__spreadArrays(scriptLoadStatus, styleLoadStatus));
 }

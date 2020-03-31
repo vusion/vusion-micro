@@ -1,4 +1,4 @@
-export const wrapReturnPromise = function (func): Promise<any> {
+export const wrapReturnPromise = function (func?: Function): Promise<any> {
     let out;
     if (!func) {
         out = Promise.resolve();

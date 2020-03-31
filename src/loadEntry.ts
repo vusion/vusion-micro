@@ -1,4 +1,5 @@
-const loadScript = function (root, src, appName): Promise<void> {
+import { SubApp } from './init';
+const loadScript = function (root: HTMLElement, src: string, appName: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.setAttribute('micro-app', appName);
@@ -10,7 +11,7 @@ const loadScript = function (root, src, appName): Promise<void> {
     });
 };
 
-const loadCSS = function (root, src, appName): Promise<void> {
+const loadCSS = function (root: HTMLElement, src: string, appName: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const element = document.createElement('link');
         element.rel = 'stylesheet';
@@ -26,29 +27,28 @@ const loadCSS = function (root, src, appName): Promise<void> {
         root.appendChild(element);
     });
 };
-const loaded = {
-
-};
-export default function (entry, appName): Promise<any[]> {
-    if (!loaded[appName]) {
-        loaded[appName] = {};
+const loadStatus = {};
+export default function (entry: SubApp["entries"], appName: string): Promise<void[]> {
+    if (!loadStatus[appName]) {
+        loadStatus[appName] = {};
     }
-    const p1 = (entry.scripts || []).map((src) => {
-        if (!loaded[appName][src]) {
-            return loadScript(document.body, src, appName).then(() => {
-                loaded[appName][src] = true;
+    const appLoadStatus = loadStatus[appName];
+    const scriptLoadStatus = (entry.js || []).map((src: string): Promise<void> => {
+        if (!appLoadStatus[src]) {
+            appLoadStatus[src] = loadScript(document.body, src, appName).then(() => {
+                appLoadStatus[src] = Promise.resolve();
             });
         }
-        return true;
+        return appLoadStatus[src];
     });
-    const p2 = (entry.styles || []).map((src) => {
-        if (!loaded[appName][src]) {
-            return loadCSS(document.head, src, appName).then(() => {
-                loaded[appName][src] = true;
+    const styleLoadStatus = (entry.css || []).map((src: string): Promise<void> => {
+        if (!appLoadStatus[src]) {
+            appLoadStatus[src] = loadCSS(document.head, src, appName).then(() => {
+                appLoadStatus[src] = Promise.resolve();
             });
         }
-        return true;
+        return appLoadStatus[src];
     });
-    return Promise.all([...p1, ...p2]);
+    return Promise.all([...scriptLoadStatus, ...styleLoadStatus]);
     
 }

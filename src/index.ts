@@ -3,8 +3,26 @@ import { wrapReturnPromise } from './utils';
 import { registerApplication, start } from 'single-spa';
 import { publish, subscribe } from 'vusion-micro-data';
 import loadEntry from './loadEntry';
-
-const registerApp = function (app): void {
+type AppConfigs = {
+    [prop: string]: AppConfig;
+};
+type AppConfig = {
+    isActive: (location: Location) => boolean;
+    mount?: Function;
+    bootstrap?: Function;
+    unmounted?: Function;
+    unmount?: Function;
+    mounted?: Function;
+    customProps: {
+        node?: string;
+        [props: string]: any;
+    };
+};
+type App = {
+    name: string;
+    entries: SubApp["entries"];
+} & AppConfig;
+const registerApp = function (app: App): void {
     registerApplication(app.name, () => {
         const topic = 'app:' + app.name;
         return Promise.resolve({
@@ -25,7 +43,7 @@ const registerApp = function (app): void {
                     wrapReturnPromise(app.mount).then(done, rej);
                 });
             },
-            unmount(customProps) {
+            unmount(customProps): Promise<any> {
                 return new Promise((res, rej): void => {
                     const done = function (): void {
                         const clear = publish(topic + ':unmount', {
@@ -40,14 +58,14 @@ const registerApp = function (app): void {
                 });
             },
         });
-    }, app.isActivity, app.customProps);
+    }, app.isActive, app.customProps);
 };
 export default {
     getEntries(name: string): Promise<SubApp[]> {
         return Promise.resolve(micro.config[name]);
     },
-    registerApps(appConfigs, appEntries): void {
-        appEntries.forEach((item): void => {
+    registerApps(appConfigs: AppConfigs, appEntries: SubApp[]): void {
+        appEntries.forEach((item: SubApp): void => {
             const name = item.name;
             const config = appConfigs[name];
             if (!config) {
