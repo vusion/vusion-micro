@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 import micro from './init';
 import { wrapReturnPromise } from './utils';
 import { registerApplication, start } from 'single-spa';
-import { publish, subscribe } from 'vusion-micro-data';
+import { publish, subscribe, resetTopic } from 'vusion-micro-data';
 import loadEntry from './loadEntry';
 var registerApp = function (app) {
     registerApplication(app.name, function () {
@@ -22,6 +22,7 @@ var registerApp = function (app) {
                 return loadEntry(app.entries, app.name).then(function () { return wrapReturnPromise(app.bootstrap); });
             },
             mount: function (customProps) {
+                resetTopic(topic + ':unmounted');
                 return new Promise(function (res, rej) {
                     var done = function () {
                         var clear = publish(topic + ':mount', {
@@ -36,6 +37,7 @@ var registerApp = function (app) {
                 });
             },
             unmount: function (customProps) {
+                resetTopic(topic + ':mounted');
                 return new Promise(function (res, rej) {
                     var done = function () {
                         var clear = publish(topic + ':unmount', {

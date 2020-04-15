@@ -46,6 +46,6 @@
   },
   "dependencies": {
     "single-spa": "^4.4.3",
-    "vusion-micro-data": "^0.0.5"
+    "vusion-micro-data": "^0.0.7"
   }
 }

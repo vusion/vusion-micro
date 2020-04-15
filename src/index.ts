@@ -1,7 +1,7 @@
 import micro, { SubApp } from './init';
 import { wrapReturnPromise } from './utils';
 import { registerApplication, start } from 'single-spa';
-import { publish, subscribe } from 'vusion-micro-data';
+import { publish, subscribe, resetTopic } from 'vusion-micro-data';
 import loadEntry from './loadEntry';
 type AppConfigs = {
     [prop: string]: AppConfig;
@@ -30,6 +30,7 @@ const registerApp = function (app: App): void {
                 return loadEntry(app.entries, app.name).then(() => wrapReturnPromise(app.bootstrap));
             },
             mount(customProps): Promise<any> {
+                resetTopic(topic + ':unmounted');
                 return new Promise((res, rej): void => {
                     const done = function (): void {
                         const clear = publish(topic + ':mount', {
@@ -44,6 +45,7 @@ const registerApp = function (app: App): void {
                 });
             },
             unmount(customProps): Promise<any> {
+                resetTopic(topic + ':mounted');
                 return new Promise((res, rej): void => {
                     const done = function (): void {
                         const clear = publish(topic + ':unmount', {
