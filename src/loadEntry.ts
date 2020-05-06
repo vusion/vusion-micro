@@ -28,19 +28,44 @@ const loadCSS = function (root: HTMLElement, src: string, appName: string): Prom
     });
 };
 const loadStatus = {};
+
+const loadScripts = function (scripts, appName): Promise<any> {
+    const appLoadStatus = loadStatus[appName];
+    let resolve;
+    let reject;
+
+    const scriptLoadStatus = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    const loop = function(src: string|void): void {
+        if (src) {
+            if (!appLoadStatus[src]) {
+                appLoadStatus[src] = loadScript(document.body, src, appName);
+            }
+            appLoadStatus[src].then(() => {
+                appLoadStatus[src] = Promise.resolve();
+                if (scripts.length) {
+                    loop(scripts.shift());
+                } else {
+                    resolve();
+                }
+            }, (e) => {
+                appLoadStatus[src] = null;
+                reject(e);
+            });
+        }
+    };
+    loop(scripts.shift());
+    return scriptLoadStatus;
+};
 export default function (entry: SubApp["entries"], appName: string): Promise<void[]> {
     if (!loadStatus[appName]) {
         loadStatus[appName] = {};
     }
     const appLoadStatus = loadStatus[appName];
-    const scriptLoadStatus = (entry.js || []).map((src: string): Promise<void> => {
-        if (!appLoadStatus[src]) {
-            appLoadStatus[src] = loadScript(document.body, src, appName).then(() => {
-                appLoadStatus[src] = Promise.resolve();
-            });
-        }
-        return appLoadStatus[src];
-    });
+    const scriptLoadStatus = loadScripts([...entry.js], appName);
+    
     const styleLoadStatus = (entry.css || []).map((src: string): Promise<void> => {
         if (!appLoadStatus[src]) {
             appLoadStatus[src] = loadCSS(document.head, src, appName).then(() => {
@@ -49,6 +74,6 @@ export default function (entry: SubApp["entries"], appName: string): Promise<voi
         }
         return appLoadStatus[src];
     });
-    return Promise.all([...scriptLoadStatus, ...styleLoadStatus]);
+    return Promise.all([scriptLoadStatus, ...styleLoadStatus]);
     
 }
