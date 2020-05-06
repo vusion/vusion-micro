@@ -1,6 +1,6 @@
 {
   "name": "vusion-micro",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -45,7 +45,7 @@
     ]
   },
   "dependencies": {
-    "single-spa": "^4.4.3",
+    "single-spa": "^5.4.0",
     "vusion-micro-data": "^0.0.8"
   }
 }

@@ -28,19 +28,42 @@ var loadCSS = function (root, src, appName) {
     });
 };
 var loadStatus = {};
+var loadScripts = function (scripts, appName) {
+    var appLoadStatus = loadStatus[appName];
+    var resolve;
+    var reject;
+    var scriptLoadStatus = new Promise(function (res, rej) {
+        resolve = res;
+        reject = rej;
+    });
+    var loop = function (src) {
+        if (src) {
+            if (!appLoadStatus[src]) {
+                appLoadStatus[src] = loadScript(document.body, src, appName);
+            }
+            appLoadStatus[src].then(function () {
+                appLoadStatus[src] = Promise.resolve();
+                if (scripts.length) {
+                    loop(scripts.shift());
+                }
+                else {
+                    resolve();
+                }
+            }, function (e) {
+                appLoadStatus[src] = null;
+                reject(e);
+            });
+        }
+    };
+    loop(scripts.shift());
+    return scriptLoadStatus;
+};
 export default function (entry, appName) {
     if (!loadStatus[appName]) {
         loadStatus[appName] = {};
     }
     var appLoadStatus = loadStatus[appName];
-    var scriptLoadStatus = (entry.js || []).map(function (src) {
-        if (!appLoadStatus[src]) {
-            appLoadStatus[src] = loadScript(document.body, src, appName).then(function () {
-                appLoadStatus[src] = Promise.resolve();
-            });
-        }
-        return appLoadStatus[src];
-    });
+    var scriptLoadStatus = loadScripts(__spreadArrays(entry.js), appName);
     var styleLoadStatus = (entry.css || []).map(function (src) {
         if (!appLoadStatus[src]) {
             appLoadStatus[src] = loadCSS(document.head, src, appName).then(function () {
@@ -49,5 +72,5 @@ export default function (entry, appName) {
         }
         return appLoadStatus[src];
     });
-    return Promise.all(__spreadArrays(scriptLoadStatus, styleLoadStatus));
+    return Promise.all(__spreadArrays([scriptLoadStatus], styleLoadStatus));
 }
