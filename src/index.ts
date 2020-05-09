@@ -7,7 +7,7 @@ type AppConfigs = {
     [prop: string]: AppConfig;
 };
 type AppConfig = {
-    isActive: (location: Location) => boolean;
+    activeWhen: string[];
     mount?: Function;
     bootstrap?: Function;
     unmounted?: Function;
@@ -22,12 +22,21 @@ type App = {
     name: string;
     entries: SubApp["entries"];
 } & AppConfig;
+const map = {};
 const registerApp = function (app: App): void {
     const customProps = app.customProps;
     if (getAppNames().includes(app.name)) {
-        console.warn('repeat register:' + app.name);
+        const preApp = map[app.name];
+        const activeWhen = preApp.activeWhen;
+        app.activeWhen.forEach((k) => {
+            if (!activeWhen.includes(k)) {
+                activeWhen.push(k);
+            }
+        });
+        Object.assign(preApp.customProps, app.customProps);
         return;
     }
+    map[app.name] = app;
     registerApplication({
         name: app.name,
         app: () => {
@@ -68,7 +77,7 @@ const registerApp = function (app: App): void {
                 },
             });
         },
-        activeWhen: app.isActive,
+        activeWhen: app.activeWhen,
         customProps,
     });
 };

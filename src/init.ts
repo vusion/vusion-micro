@@ -8,7 +8,6 @@ export type SubApp = {
 };
 declare global {
     interface Window {
-        __MICROAPP__: boolean;
         micro: {
             config: {
                 [prop: string]: SubApp[];
@@ -16,7 +15,6 @@ declare global {
         };
     }
 }
-window.__MICROAPP__ = true;
 const micro = window.micro || {
     config: {},
 };

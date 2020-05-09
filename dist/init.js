@@ -1,4 +1,3 @@
-window.__MICROAPP__ = true;
 var micro = window.micro || {
     config: {},
 };

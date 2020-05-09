@@ -14,12 +14,21 @@ import { wrapReturnPromise } from './utils';
 import { registerApplication, start, getAppNames, unloadApplication } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
 import loadEntry from './loadEntry';
+var map = {};
 var registerApp = function (app) {
     var customProps = app.customProps;
     if (getAppNames().includes(app.name)) {
-        console.warn('repeat register:' + app.name);
+        var preApp = map[app.name];
+        var activeWhen_1 = preApp.activeWhen;
+        app.activeWhen.forEach(function (k) {
+            if (!activeWhen_1.includes(k)) {
+                activeWhen_1.push(k);
+            }
+        });
+        Object.assign(preApp.customProps, app.customProps);
         return;
     }
+    map[app.name] = app;
     registerApplication({
         name: app.name,
         app: function () {
@@ -60,7 +69,7 @@ var registerApp = function (app) {
                 },
             });
         },
-        activeWhen: app.isActive,
+        activeWhen: app.activeWhen,
         customProps: customProps,
     });
 };
