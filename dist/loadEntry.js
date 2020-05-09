@@ -5,10 +5,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var loadScript = function (root, src, appName) {
+export var loadScript = function (root, src, appName) {
     return new Promise(function (resolve, reject) {
         var script = document.createElement('script');
-        script.setAttribute('micro-app', appName);
+        if (appName) {
+            script.setAttribute('micro-app', appName);
+        }
         // external script
         script.setAttribute('src', src);
         script.addEventListener('load', function () { return resolve(); }, false);
@@ -16,7 +18,7 @@ var loadScript = function (root, src, appName) {
         root.appendChild(script);
     });
 };
-var loadCSS = function (root, src, appName) {
+export var loadCSS = function (root, src, appName) {
     return new Promise(function (resolve, reject) {
         var element = document.createElement('link');
         element.rel = 'stylesheet';

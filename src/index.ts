@@ -2,7 +2,7 @@ import micro, { SubApp } from './init';
 import { wrapReturnPromise } from './utils';
 import { registerApplication, start, getAppNames, unloadApplication } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
-import loadEntry from './loadEntry';
+import loadEntry, { loadScript } from './loadEntry';
 type AppConfigs = {
     [prop: string]: AppConfig;
 };
@@ -81,7 +81,7 @@ const registerApp = function (app: App): void {
         customProps,
     });
 };
-const unloadApp = function(name: string): ReturnType<typeof unloadApplication> {
+const unloadApp = function (name: string): ReturnType<typeof unloadApplication> {
     return unloadApplication(name);
 };
 export default {
@@ -108,5 +108,39 @@ export default {
     },
     start(): void {
         start();
+    },
+    loadEntries(entries, masterName: string, slaveName: string): Promise<SubApp["entries"]|string> {
+        const micro = window.micro;
+        const microConfig = micro.config;
+        const subApps = micro.subApps;
+        const setEntries = (entries: SubApp["entries"]): void => {
+            const apps = microConfig[masterName] = microConfig[masterName] || [];
+            if (!apps.map((i) => i.name).includes(slaveName)) {
+                apps.push({
+                    name: slaveName,
+                    entries,
+                } as SubApp);
+            }
+        };
+        if (subApps[slaveName]) {
+            setEntries(subApps[slaveName]);
+            return Promise.resolve(subApps[slaveName]);
+        } else if (entries) {
+            if (typeof entries === 'string') {
+                return loadScript(document.body, entries).then(() => {
+                    setEntries(subApps[slaveName]);
+                    return Promise.resolve(subApps[slaveName]);
+                });
+            } else if (entries.js) {
+                setEntries(entries);
+                return Promise.resolve(entries);
+            } else {
+                return Promise.reject('loadEntries error');
+            }
+        } else {
+            return this.getEntries(masterName).then((appEntries) => {
+                return appEntries.find((item) => item.name === slaveName);
+            });
+        }
     },
 };

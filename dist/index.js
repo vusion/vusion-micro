@@ -13,7 +13,7 @@ import micro from './init';
 import { wrapReturnPromise } from './utils';
 import { registerApplication, start, getAppNames, unloadApplication } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
-import loadEntry from './loadEntry';
+import loadEntry, { loadScript } from './loadEntry';
 var map = {};
 var registerApp = function (app) {
     var customProps = app.customProps;
@@ -96,5 +96,43 @@ export default {
     },
     start: function () {
         start();
+    },
+    loadEntries: function (entries, masterName, slaveName) {
+        var micro = window.micro;
+        var microConfig = micro.config;
+        var subApps = micro.subApps;
+        var setEntries = function (entries) {
+            var apps = microConfig[masterName] = microConfig[masterName] || [];
+            if (!apps.map(function (i) { return i.name; }).includes(slaveName)) {
+                apps.push({
+                    name: slaveName,
+                    entries: entries,
+                });
+            }
+        };
+        if (subApps[slaveName]) {
+            setEntries(subApps[slaveName]);
+            return Promise.resolve(subApps[slaveName]);
+        }
+        else if (entries) {
+            if (typeof entries === 'string') {
+                return loadScript(document.body, entries).then(function () {
+                    setEntries(subApps[slaveName]);
+                    return Promise.resolve(subApps[slaveName]);
+                });
+            }
+            else if (entries.js) {
+                setEntries(entries);
+                return Promise.resolve(entries);
+            }
+            else {
+                return Promise.reject('loadEntries error');
+            }
+        }
+        else {
+            return this.getEntries(masterName).then(function (appEntries) {
+                return appEntries.find(function (item) { return item.name === slaveName; });
+            });
+        }
     },
 };

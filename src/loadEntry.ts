@@ -1,8 +1,10 @@
 import { SubApp } from './init';
-const loadScript = function (root: HTMLElement, src: string, appName: string): Promise<void> {
+export const loadScript = function (root: HTMLElement, src: string, appName?: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.setAttribute('micro-app', appName);
+        if (appName) {
+            script.setAttribute('micro-app', appName);
+        }
         // external script
         script.setAttribute('src', src);
         script.addEventListener('load', () => resolve(), false);
@@ -11,7 +13,7 @@ const loadScript = function (root: HTMLElement, src: string, appName: string): P
     });
 };
 
-const loadCSS = function (root: HTMLElement, src: string, appName: string): Promise<void> {
+export const loadCSS = function (root: HTMLElement, src: string, appName: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const element = document.createElement('link');
         element.rel = 'stylesheet';
