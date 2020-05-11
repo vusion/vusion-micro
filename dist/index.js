@@ -19,14 +19,19 @@ var registerApp = function (app) {
     var customProps = app.customProps;
     if (getAppNames().includes(app.name)) {
         var preApp = map[app.name];
-        var activeWhen_1 = preApp.activeWhen;
-        app.activeWhen.forEach(function (k) {
-            if (!activeWhen_1.includes(k)) {
-                activeWhen_1.push(k);
+        var urlRule_1 = preApp.urlRule;
+        app.urlRule.forEach(function (k) {
+            if (!urlRule_1.includes(k)) {
+                urlRule_1.push(k);
             }
         });
         Object.assign(preApp.customProps, app.customProps);
         return;
+    }
+    else {
+        app.activeWhen = function () {
+            return app.urlRule;
+        };
     }
     map[app.name] = app;
     registerApplication({

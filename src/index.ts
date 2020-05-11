@@ -1,13 +1,14 @@
 import micro, { SubApp } from './init';
 import { wrapReturnPromise } from './utils';
-import { registerApplication, start, getAppNames, unloadApplication } from 'single-spa';
+import { registerApplication, start, getAppNames, unloadApplication, ActivityFn } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
 import loadEntry, { loadScript } from './loadEntry';
 type AppConfigs = {
     [prop: string]: AppConfig;
 };
 type AppConfig = {
-    activeWhen: string[];
+    urlRule: string[];
+    activeWhen: Function;
     mount?: Function;
     bootstrap?: Function;
     unmounted?: Function;
@@ -27,14 +28,18 @@ const registerApp = function (app: App): void {
     const customProps = app.customProps;
     if (getAppNames().includes(app.name)) {
         const preApp = map[app.name];
-        const activeWhen = preApp.activeWhen;
-        app.activeWhen.forEach((k) => {
-            if (!activeWhen.includes(k)) {
-                activeWhen.push(k);
+        const urlRule = preApp.urlRule;
+        app.urlRule.forEach((k) => {
+            if (!urlRule.includes(k)) {
+                urlRule.push(k);
             }
         });
         Object.assign(preApp.customProps, app.customProps);
         return;
+    } else {
+        app.activeWhen = function(): string[] {
+            return app.urlRule;
+        };
     }
     map[app.name] = app;
     registerApplication({
@@ -77,7 +82,7 @@ const registerApp = function (app: App): void {
                 },
             });
         },
-        activeWhen: app.activeWhen,
+        activeWhen: app.activeWhen as ActivityFn,
         customProps,
     });
 };
