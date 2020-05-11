@@ -74,7 +74,12 @@ var registerApp = function (app) {
     });
 };
 var unloadApp = function (name) {
-    return unloadApplication(name);
+    if (getAppNames().includes(name)) {
+        return unloadApplication(name);
+    }
+    else {
+        return Promise.resolve();
+    }
 };
 export default {
     getEntries: function (name) {

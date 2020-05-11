@@ -82,7 +82,11 @@ const registerApp = function (app: App): void {
     });
 };
 const unloadApp = function (name: string): ReturnType<typeof unloadApplication> {
-    return unloadApplication(name);
+    if (getAppNames().includes(name)) {
+        return unloadApplication(name);
+    } else {
+        return Promise.resolve();
+    }
 };
 export default {
     getEntries(name: string): Promise<SubApp[]> {
