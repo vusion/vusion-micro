@@ -4,5 +4,7 @@ var micro = window.micro || {
 };
 micro.config = micro.config || {};
 micro.subApps = micro.subApps || {};
-window.micro = micro;
+if (!window.micro) {
+    window.micro = micro;
+}
 export default micro;
