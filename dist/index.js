@@ -11,7 +11,7 @@ var __assign = (this && this.__assign) || function () {
 };
 import micro from './init';
 import { wrapReturnPromise } from './utils';
-import { registerApplication, start, getAppNames, unloadApplication } from 'single-spa';
+import { registerApplication, start, getAppNames, unloadApplication, pathToActiveWhen } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
 import loadEntry, { loadScript } from './loadEntry';
 var map = {};
@@ -29,8 +29,10 @@ var registerApp = function (app) {
         return;
     }
     else {
-        app.activeWhen = function () {
-            return app.urlRule;
+        app.activeWhen = function (location) {
+            return app.urlRule.map(function (i) {
+                return typeof i === 'function' ? i : pathToActiveWhen(i);
+            }).some(function (fn) { return fn(location); });
         };
     }
     map[app.name] = app;

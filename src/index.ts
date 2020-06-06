@@ -1,6 +1,6 @@
 import micro, { SubApp } from './init';
 import { wrapReturnPromise } from './utils';
-import { registerApplication, start, getAppNames, unloadApplication, ActivityFn } from 'single-spa';
+import { registerApplication, start, getAppNames, unloadApplication, ActivityFn, pathToActiveWhen } from 'single-spa';
 import { publish, subscribe, clearTopic } from 'vusion-micro-data';
 import loadEntry, { loadScript } from './loadEntry';
 type AppConfigs = {
@@ -37,8 +37,10 @@ const registerApp = function (app: App): void {
         Object.assign(preApp.customProps, app.customProps);
         return;
     } else {
-        app.activeWhen = function(): string[] {
-            return app.urlRule;
+        app.activeWhen = function(location): boolean {
+            return app.urlRule.map((i) => {
+                return typeof i === 'function' ? i : pathToActiveWhen(i);
+            }).some((fn) => fn(location));
         };
     }
     map[app.name] = app;
