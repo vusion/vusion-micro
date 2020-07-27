@@ -17,6 +17,9 @@ type AppConfig = {
     customProps: {
         node?: string;
         [props: string]: any;
+        appInfo: {
+            alive: boolean;
+        };
     };
 };
 type App = {
@@ -52,19 +55,22 @@ const registerApp = function (app: App): void {
                 bootstrap(): Promise<any> {
                     return loadEntry(app.entries, app.name).then(() => wrapReturnPromise(app.bootstrap));
                 },
-                mount(customProps): Promise<any> {
+                mount(customProps: AppConfig["customProps"]): Promise<any> {
                     clearTopic(topic + ':unmounted');
                     return new Promise((res, rej): void => {
-                        const done = function (): void {
-                            const clear = publish(topic + ':mount', {
-                                customProps,
-                            });
-                            clear();
-                            subscribe(topic + ':mounted', (): void => {
-                                wrapReturnPromise(app.mounted).then(res, rej);
-                            }, true);
-                        };
-                        wrapReturnPromise(app.mount).then(done, rej);
+                        wrapReturnPromise(app.mount).then((): void => {
+                            if (customProps.appInfo.alive) {
+                                const clear = publish(topic + ':mount', {
+                                    customProps,
+                                });
+                                clear();
+                                subscribe(topic + ':mounted', (): void => {
+                                    wrapReturnPromise(app.mounted).then(res, rej);
+                                }, true);
+                            } else {
+                                rej();
+                            }
+                        }, rej);
                     });
                 },
                 unmount(customProps): Promise<any> {

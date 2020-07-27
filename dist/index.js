@@ -47,16 +47,20 @@ var registerApp = function (app) {
                 mount: function (customProps) {
                     clearTopic(topic + ':unmounted');
                     return new Promise(function (res, rej) {
-                        var done = function () {
-                            var clear = publish(topic + ':mount', {
-                                customProps: customProps,
-                            });
-                            clear();
-                            subscribe(topic + ':mounted', function () {
-                                wrapReturnPromise(app.mounted).then(res, rej);
-                            }, true);
-                        };
-                        wrapReturnPromise(app.mount).then(done, rej);
+                        wrapReturnPromise(app.mount).then(function () {
+                            if (customProps.appInfo.alive) {
+                                var clear = publish(topic + ':mount', {
+                                    customProps: customProps,
+                                });
+                                clear();
+                                subscribe(topic + ':mounted', function () {
+                                    wrapReturnPromise(app.mounted).then(res, rej);
+                                }, true);
+                            }
+                            else {
+                                rej();
+                            }
+                        }, rej);
                     });
                 },
                 unmount: function (customProps) {
